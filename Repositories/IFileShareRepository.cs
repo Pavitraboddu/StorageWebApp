@@ -4,8 +4,8 @@ namespace StorageWebApp.Repositories
 {
     public interface IFileShareRepository
     {
-        Task CreateFileAsync(string fileShareName);
-        Task DeleteFileAsync(string fileShareName);
-        Task Upload(FileModel model);
+        Task<bool>UploadFile(IFormFile file);
+        Task<byte[]>DownloadFile(string fileName);
+        Task<bool> DeleteFile(string fileName);
     }
 }

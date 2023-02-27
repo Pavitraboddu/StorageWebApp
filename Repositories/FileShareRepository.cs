@@ -1,58 +1,49 @@
-﻿using Azure.Storage.Blobs;
-using Azure;
+﻿using Azure;
+using Azure.Storage.Blobs;
 using Azure.Storage.Files.Shares;
-using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel;
-using System.Dynamic;
-using System.IO;
-using System.Net;
-using System.Reflection.PortableExecutable;
-using System;
-using System.Security.Cryptography.X509Certificates;
-using static System.Net.Mime.MediaTypeNames;
-using System.Xml.Linq;
-using System.Reflection.Metadata.Ecma335;
 using StorageWebApp.Models;
 
 namespace StorageWebApp.Repositories
 {
     public class FileShareRepository : IFileShareRepository
     {
-        private static string connectionString = "";
-        public async Task CreateFileAsync(string fileShareName)
+        private static string connectionString = "DefaultEndpointsProtocol=https;AccountName=pavitrastorage;AccountKey=WcP5EsCxivIaTnTIv0N1knfFU8s76p9A5fjvXfXhuw5nofUdiYO4geSUFpCUsR978aSmKxFPlTNC+AStk9CrmA==;EndpointSuffix=core.windows.net";
+        private static string fileShareName = "pavitrafile";
+        //private static string ShareClient shareClient;
+
+        public FileShareRepository()
         {
-            ShareClient share = new ShareClient(connectionString, fileShareName);
-            await share.CreateIfNotExistsAsync();
-            if (await share.ExistsAsync())
+
+        }
+        public async Task<byte[]> DownloadFile(string fileName)
+        {
+            var shareClient = new ShareClient(connectionString, fileShareName);
+            var shareDirectoryClient = shareClient.GetDirectoryClient("");
+            var shareFileClient = shareDirectoryClient.GetFileClient(fileName);
+            var response = await shareFileClient.DownloadAsync();
+            using var memoryStream = new MemoryStream();
+            await response.Value.Content.CopyToAsync(memoryStream);
+            return memoryStream.ToArray();
+        }
+        public async Task<bool> UploadFile(IFormFile file)
+        {
+            var shareClient = new ShareClient(connectionString, fileShareName);
+            var shareDirectoryClient = shareClient.GetDirectoryClient("");
+            var shareFileClient = shareDirectoryClient.GetFileClient(file.FileName);
+            using (var stream = file.OpenReadStream())
             {
-                Console.WriteLine($"Share created: {share.Name}");
-
+                shareFileClient.Create(stream.Length);
+                await shareFileClient.UploadRangeAsync(new HttpRange(0, file.Length), stream);
             }
-            else
-            {
-                Console.WriteLine($"CreateFileAsync failed");
-            }
+            return true;
         }
-        public async Task DeleteFileAsync(string fileShareName)
+        public async Task<bool> DeleteFile(string fileName)
         {
-            ShareClient share = new ShareClient(connectionString, fileShareName);
-            await share.DeleteIfExistsAsync();
-        }
-        private readonly BlobServiceClient _blobServiceClient;
-        public FileShareRepository(BlobServiceClient blobServiceClient)
-        {
-            _blobServiceClient = blobServiceClient;
-        }
-
-        public async Task Upload(FileModel model)
-        {
-            var blobContainer = _blobServiceClient.GetBlobContainerClient("Container name");
-
-            var blobClient = blobContainer.GetBlobClient(model.ImageFile.FileName);
-
-            await blobClient.UploadAsync(model.ImageFile.OpenReadStream());
+            var shareClient = new ShareClient(connectionString, fileShareName);
+            var shareDirectoryClient = shareClient.GetDirectoryClient("");
+            var shareFileClient = shareDirectoryClient.GetFileClient(fileName);
+            await shareFileClient.DeleteAsync();
+            return true;
         }
     }
 }

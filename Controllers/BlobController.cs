@@ -22,10 +22,14 @@ namespace StorageWebApp.Controllers
             return details;
         }
 
-        [HttpPost("Create")]
-        public async Task<BlobStorage> AddFile(string fileName)
+        [HttpPost("create")]
+        public async Task<ActionResult<BlobStorage>> AddFile(string fileName,IFormFile file)
         {
-            var details = await repository.AddFileAsync(fileName);
+            if(file == null)
+            {
+                return BadRequest();
+            }
+            var details = await repository.AddFileAsync(fileName, file.OpenReadStream());
             return details;
         }
 

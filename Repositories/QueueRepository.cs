@@ -5,12 +5,13 @@ namespace StorageWebApp.Repositories
 {
     public class QueueRepository : IQueueRepository
     {
-        private static string connectionString = "";
-        public async Task<string> CreateQueue(string queueName)
+        private static string connectionString = "DefaultEndpointsProtocol=https;AccountName=pavitrastorage;AccountKey=WcP5EsCxivIaTnTIv0N1knfFU8s76p9A5fjvXfXhuw5nofUdiYO4geSUFpCUsR978aSmKxFPlTNC+AStk9CrmA==;EndpointSuffix=core.windows.net";
+       // private static string queueName = "queue1";
+        public async Task<string> CreateQueue(string queuename)
         {
             try
             {
-                QueueClient queueClient = new QueueClient(connectionString, queueName);
+                QueueClient queueClient = new QueueClient(connectionString, queuename);
                 queueClient.CreateIfNotExists();
                 if (queueClient.Exists())
                 {
@@ -23,9 +24,9 @@ namespace StorageWebApp.Repositories
                 throw ex;
             }
         }
-        public async Task<string> DeleteQueue(string queueName)
+        public async Task<string> DeleteQueue(string queuename)
         {
-            QueueClient queueClient = new QueueClient(connectionString, queueName);
+            QueueClient queueClient = new QueueClient(connectionString, queuename);
             if (queueClient.Exists())
             {
                 queueClient.Delete();
@@ -33,9 +34,9 @@ namespace StorageWebApp.Repositories
             }
             return "Queue is not deleted";
         }
-        public async Task<string> InsertQueue(string queueName, string message)
+        public async Task<string> InsertQueue(string queuename, string message)
         {
-            QueueClient queueClient = new QueueClient(connectionString, queueName);
+            QueueClient queueClient = new QueueClient(connectionString, queuename);
             queueClient.CreateIfNotExists();
             if (queueClient.Exists())
             {

@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿
 using Microsoft.AspNetCore.Mvc;
 using StorageWebApp.Models;
 using StorageWebApp.Repositories;
-using System.IO;
 
 namespace StorageWebApp.Controllers
 {
@@ -10,32 +9,44 @@ namespace StorageWebApp.Controllers
     [ApiController]
     public class FileShareController : ControllerBase
     {
-        private readonly FileShareRepository repository;
-        public FileShareController(FileShareRepository repository)
+        private readonly IFileShareRepository repository;
+        public FileShareController(IFileShareRepository repository)
         {
             this.repository = repository;
         }
-        [HttpPost("create")]
-        public async Task<IActionResult> CreateFileAsync(string fileShareName)
+        [HttpGet("Retrieve")]
+        public async Task<IActionResult> DownloadFile(string fileName)
         {
-            await repository.CreateFileAsync(fileShareName);
-            return Ok();
-        }
-
-        [HttpPut("Upload")]
-        public async Task<IActionResult> Upload([FromForm] FileModel model)
-        {
-            if (model.ImageFile != null)
+            var file = await repository.DownloadFile(fileName); 
+            if (file == null)
             {
-                await repository.Upload(model);
+                return NotFound();
             }
-            return Ok();
+            return File(file, "application/octet-stream", fileName);
         }
-        [HttpDelete("delete")]
-        public async Task<IActionResult> DeleteFileAsync(string fileShareName)
+        [HttpPost("Create")]
+        public async Task<IActionResult> UploadFile([FromForm] FileModel file)
         {
-            await repository.DeleteFileAsync(fileShareName);
-            return Ok();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var result = await repository.UploadFile(file.File);
+            if (result)
+            {
+                return Ok();
+            }
+            return BadRequest();
+        }
+        [HttpDelete("Delete")]
+        public async Task<IActionResult> DeleteFile(string fileName)
+        {
+            var result = await repository.DeleteFile(fileName); 
+            if (result)
+            {
+                return Ok();
+            }
+            return BadRequest();
         }
     }
 }
