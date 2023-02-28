@@ -10,7 +10,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddTransient<BlobRepository>(BlobRepository => new BlobRepository("DefaultEndpointsProtocol=https;AccountName=pavitrastorage;AccountKey=W0zwHK3hjFqHGy7t29go1HamiPlAIZP0Kkj8ccLcqs0YEgSqx0YVmWds7NAMaQjYYTs+dmfK3y7p+AStrBCI5A==;EndpointSuffix=core.windows.net","pavitracontainer"));
 builder.Services.AddScoped<ITableStorageRepository, TableStorageRepository>();
-
+builder.Services.AddScoped<IFileShareRepository, FileShareRepository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
