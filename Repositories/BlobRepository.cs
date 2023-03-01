@@ -6,11 +6,11 @@ namespace StorageWebApp.Repositories
 {
     public class BlobRepository : IBlobRepository
     {
-        private static string connectionString = "DefaultEndpointsProtocol=https;AccountName=pavitrastorage;AccountKey=W0zwHK3hjFqHGy7t29go1HamiPlAIZP0Kkj8ccLcqs0YEgSqx0YVmWds7NAMaQjYYTs+dmfK3y7p+AStrBCI5A==;EndpointSuffix=core.windows.net";
+        private static string connectionString = "DefaultEndpointsProtocol=https;AccountName=pavitrastorage;AccountKey=mk+02W72sM+UqL3p81KsIFjEpDDpb32Ezu/j1sIo+AFT9OZRAzq0/LCRQLnJR5u/RfZusgdcvBbN+AStDJt7Pw==;EndpointSuffix=core.windows.net";
         private readonly CloudBlobContainer _container;
         public BlobRepository(string connectionString, string containername)
         {
-            var blobClient = CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=pavitrastorage;AccountKey=W0zwHK3hjFqHGy7t29go1HamiPlAIZP0Kkj8ccLcqs0YEgSqx0YVmWds7NAMaQjYYTs+dmfK3y7p+AStrBCI5A==;EndpointSuffix=core.windows.net").CreateCloudBlobClient();
+            var blobClient = CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=pavitrastorage;AccountKey=mk+02W72sM+UqL3p81KsIFjEpDDpb32Ezu/j1sIo+AFT9OZRAzq0/LCRQLnJR5u/RfZusgdcvBbN+AStDJt7Pw==;EndpointSuffix=core.windows.net").CreateCloudBlobClient();
             _container = blobClient.GetContainerReference("pavitracontainer");
         }
         public async Task<BlobStorage> GetFileAsync(string fileName )

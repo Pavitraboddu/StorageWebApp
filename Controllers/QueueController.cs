@@ -1,31 +1,50 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using StorageWebApp.Repositories;
+using StorageWebApp.Models;
+//using StorageWebApp.Interfaces;
 
 namespace StorageWebApp.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class QueueController : ControllerBase
-    {
-        static readonly IQueueRepository repository = new QueueRepository();
-        [HttpPost("create")]
-        public async Task<IActionResult> CreateQueue(string queueName)
+        [Route("api/[controller]")]
+        [ApiController]
+        public class QueueController : ControllerBase
         {
-            await repository.CreateQueue(queueName);
-            return Ok();
-        }
-        [HttpDelete("delete")]
-        public async Task<IActionResult> DeleteQueue(string queueName)
-        {
-            await repository.DeleteQueue(queueName);
-            return Ok();
-        }
-        [HttpPut("Insert")] 
-        public async Task<IActionResult> InsertQueue(string queueName, string message)
-        {
-            var result = await repository.InsertQueue(queueName, message);
-            return Ok(result);
+            private readonly IQueueRepository _queueRepository;
+
+            public QueueController(IQueueRepository queueRepository)
+            {
+                this._queueRepository = queueRepository;
+            }
+
+            [HttpPost("CreateMessage")]
+            public async Task AddMessage(QueueMessage message)
+            {
+                await _queueRepository.AddMessageAsync(message);
+            }
+
+
+            [HttpGet("DequeueMessage")]
+            public async Task<QueueMessage> DequeueMessage()
+            {
+                return await _queueRepository.DequeueMessageAsync();
+
+            }
+
+            [HttpPut("UpdateMessage")]
+            public async Task UpdateMessage(QueueMessage message)
+            {
+                await _queueRepository.UpdateMessageAsync(message);
+            }
+
+            [HttpDelete("ClearQueue")]
+            public async Task ClearQueue()
+            {
+                await _queueRepository.ClearQueueAsync();
+            }
+
         }
     }
-}
+
+
+
+

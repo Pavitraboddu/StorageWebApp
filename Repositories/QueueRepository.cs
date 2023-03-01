@@ -1,50 +1,63 @@
 ﻿using Azure.Storage.Queues;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using StorageWebApp.Models;
 using System.Configuration;
 
 namespace StorageWebApp.Repositories
 {
-    public class QueueRepository : IQueueRepository
-    {
-        private static string connectionString = "DefaultEndpointsProtocol=https;AccountName=pavitrastorage;AccountKey=W0zwHK3hjFqHGy7t29go1HamiPlAIZP0Kkj8ccLcqs0YEgSqx0YVmWds7NAMaQjYYTs+dmfK3y7p+AStrBCI5A==;EndpointSuffix=core.windows.net";
-       // private static string queueName = "queue1";
-        public async Task<string> CreateQueue(string queuename)
+        public class QueueRepository : IQueueRepository
         {
-            try
-            {
-                QueueClient queueClient = new QueueClient(connectionString, queuename);
-                queueClient.CreateIfNotExists();
-                if (queueClient.Exists())
-                {
-                    return "Queue successfully created ";
-                }
-                return "Queue is not created";
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-        public async Task<string> DeleteQueue(string queuename)
-        {
-            QueueClient queueClient = new QueueClient(connectionString, queuename);
-            if (queueClient.Exists())
-            {
-                queueClient.Delete();
-                return " Queue is deleted";
-            }
-            return "Queue is not deleted";
-        }
-        public async Task<string> InsertQueue(string queuename, string message)
-        {
-            QueueClient queueClient = new QueueClient(connectionString, queuename);
-            queueClient.CreateIfNotExists();
-            if (queueClient.Exists())
-            {
-                queueClient.SendMessage(message);
-                return "Message inserted";
-            }
-            return "Message is not  inserted";
-        }
+            private readonly QueueClient _queueClient;
 
-    }
+            public QueueRepository(IConfiguration configuration)
+            {
+                string connectionString = configuration["Storage:ConnectionString"];
+                string queueName = configuration.GetValue<string>("Storage:queueName");
+                _queueClient = new QueueClient(connectionString, queueName);
+            }
+
+            public async Task AddMessageAsync(QueueMessage message)
+            {
+                string messageBody = JsonConvert.SerializeObject(message);
+                await _queueClient.SendMessageAsync(messageBody);
+            }
+
+            public async Task<QueueMessage> DequeueMessageAsync()
+            {
+                QueueMessage message = null;
+                var receivedMessage = await _queueClient.ReceiveMessageAsync();
+
+                if (receivedMessage != null)
+                {
+                    message = JsonConvert.DeserializeObject<QueueMessage>(receivedMessage.Value.MessageText);
+                    await _queueClient.DeleteMessageAsync(receivedMessage.Value.MessageId, receivedMessage.Value.PopReceipt);
+                }
+
+                return message;
+            }
+
+            public async Task UpdateMessageAsync(QueueMessage message)
+            {
+                var receivedMessage = await _queueClient.ReceiveMessageAsync();
+                if (receivedMessage?.Value != null)
+                {
+                    var updatedMessage = JsonConvert.DeserializeObject<QueueMessage>(receivedMessage.Value.MessageText);
+                    updatedMessage.MessageId = message.MessageId;
+                    updatedMessage.MessageContent = message.MessageContent;
+                    var messageBody = JsonConvert.SerializeObject(updatedMessage);
+                    await _queueClient.UpdateMessageAsync(receivedMessage.Value.MessageId, receivedMessage.Value.PopReceipt, messageBody, TimeSpan.Zero);
+                }
+            }
+
+
+            public async Task ClearQueueAsync()
+            {
+                await _queueClient.ClearMessagesAsync();
+            }
+
+
+        }
 }
+
+    
